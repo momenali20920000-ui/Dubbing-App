@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK Manually
 
 on:
   push:
@@ -6,21 +6,50 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      # تحديث أداة استدعاء الكود للإصدار 4
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      # بناء التطبيق
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      # 1. تجهيز الجافا (مهم للأندرويد)
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          distribution: 'temurin'
+          java-version: '17'
 
-      # تحديث أداة رفع الملف للإصدار 4 (وهذا هو حل المشكلة)
+      # 2. تجهيز بايثون
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. تثبيت المكتبات الضرورية للنظام
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git ffmpeg libffi-dev libssl-dev python3-dev \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+            libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev \
+            zlib1g-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good autoconf libtool pkg-config \
+            libncurses5-dev libncursesw5-dev cmake
+
+      # 4. تثبيت أداة Buildozer
+      - name: Install Buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33
+
+      # 5. بناء التطبيق (قد يستغرق 15 دقيقة)
+      - name: Build APK
+        run: |
+          # الأمر yes للموافقة التلقائية على التراخيص
+          yes | buildozer android debug
+
+      # 6. رفع الملف النهائي لك
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
