@@ -1,0 +1,27 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # تجهيز مصنع التطبيقات
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          buildozer_version: master
+
+      # رفع ملف APK الناتج عشان تحمله
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-app
+          path: bin/*.apk
