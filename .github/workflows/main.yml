@@ -1,4 +1,4 @@
-name: Build APK Manually
+name: Build APK Clean
 
 on:
   push:
@@ -12,44 +12,48 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. تجهيز الجافا (مهم للأندرويد)
+      # 1. تنظيف السيرفر لتوفير مساحة وتجنب التعارضات
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+
+      # 2. تجهيز الجافا
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 2. تجهيز بايثون
+      # 3. تجهيز بايثون
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 3. تثبيت المكتبات الضرورية للنظام
-      - name: Install System Dependencies
+      # 4. تثبيت "أدوات البناء" فقط (تم إزالة المكتبات المسببة للمشاكل)
+      - name: Install Build Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential git ffmpeg libffi-dev libssl-dev python3-dev \
-            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
-            libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev \
-            zlib1g-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good autoconf libtool pkg-config \
-            libncurses5-dev libncursesw5-dev cmake
+            zlib1g-dev autoconf libtool pkg-config cmake \
+            libncurses5-dev libncursesw5-dev libltdl-dev \
+            zip unzip libunwind-dev
 
-      # 4. تثبيت أداة Buildozer
+      # 5. تثبيت Buildozer
       - name: Install Buildozer
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
 
-      # 5. بناء التطبيق (قد يستغرق 15 دقيقة)
+      # 6. بناء التطبيق
       - name: Build APK
         run: |
-          # الأمر yes للموافقة التلقائية على التراخيص
           yes | buildozer android debug
 
-      # 6. رفع الملف النهائي لك
+      # 7. رفع الملف الناتج
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
