@@ -1,27 +1,37 @@
-name: Build Android APK
+name: Build APK Manually
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-android:
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      # تجهيز مصنع التطبيقات
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libffi-dev git ffmpeg libssl-dev zlib1g-dev
+          sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33
+
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: master
+        run: |
+          # الأمر yes للموافقة التلقائية على التراخيص
+          yes | buildozer android debug
 
-      # رفع ملف APK الناتج عشان تحمله
       - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: my-app
+          name: Dubbing-App-APK
           path: bin/*.apk
