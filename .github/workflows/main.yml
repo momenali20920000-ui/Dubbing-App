@@ -1,15 +1,18 @@
 name: Build APK
 
-on: [push]
+on:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      # تحديث أداة استدعاء الكود للإصدار 4
+      - uses: actions/checkout@v4
 
-      # خطوة بناء التطبيق (باستخدام بيئة جاهزة)
+      # بناء التطبيق
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
@@ -17,9 +20,9 @@ jobs:
           command: buildozer android debug
           buildozer_version: master
 
-      # خطوة رفع الملف الناتج
+      # تحديث أداة رفع الملف للإصدار 4 (وهذا هو حل المشكلة)
       - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Dubbing-App
           path: bin/*.apk
